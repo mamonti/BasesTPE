@@ -1,2 +1,2 @@
-\copy userTP FROM '../resources/Users.tsv' (DELIMITER ' ');
-\copy badges FROM '../resources/Badges.tsv' (DELIMITER ' ');
+\copy userTP FROM '../resources/Users.tsv' (HEADER DELIMITER ' ');
+\copy badges FROM '../resources/Badges.tsv' (HEADER DELIMITER ' ');
