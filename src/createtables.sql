@@ -31,8 +31,8 @@ FOREIGN KEY(userID) REFERENCES userTP
 CREATE OR REPLACE FUNCTION migrate () RETURNS VOID
 AS $$
   BEGIN
-    COPY userTP FROM './Users.tsv' (DELIMITER ' ');
-    COPY badges FROM './Badges.tsv' (DELIMITER ' ');
+    COPY userTP FROM '../resources/Users.tsv' (DELIMITER ' ');
+    COPY badges FROM '../resources/Badges.tsv' (DELIMITER ' ');
 
     DROP TABLE userTP;
     DROP TABLE badges;
