@@ -10,7 +10,7 @@ loaction TEXT,
 aboutMe TEXT,
 views INT,
 upVotes INT,
-downVotes INT, 
+downVotes INT,
 acountID INT,
 
 PRIMARY KEY(ID)
@@ -28,18 +28,62 @@ PRIMARY KEY(ID),
 FOREIGN KEY(userID) REFERENCES userTP
 );
 
-CREATE OR REPLACE FUNCTION migrate () RETURNS VOID 
+CREATE OR REPLACE FUNCTION migrate () RETURNS VOID
 AS $$
   BEGIN
-    COPY userTP FROM '/Users/florenciamonti/Desktop/bases/Users.tsv' (DELIMITER ' ');
-    COPY badges FROM '/Users/florenciamonti/Desktop/bases/Badges.tsv' (DELIMITER ' ');
-  
-    DROP TABLE userTP; 
+    COPY userTP FROM './Users.tsv' (DELIMITER ' ');
+    COPY badges FROM './Badges.tsv' (DELIMITER ' ');
+
+    DROP TABLE userTP;
     DROP TABLE badges;
-END; 
+END;
 $$ LANGUAGE PLPGSQL;
 
+CREATE TRIGGER UPVOTESTOPREF
+AFTER UPDATE OF upVotes ON USERTP
+FOR EACH STATEMENT
+EXECUTE PROCEDURE upVotesRep();
 
-SELECT * FROM migrate(); 
+CREATE OR REPLACE FUNCTION upVotesRep() RETURNS Trigger AS $$
+BEGIN
+    IF new.upVotes >= 0 THEN
+        new.reputation := old.reputation + (new.upVotes - old.upVotes) * 5;
+    ELSE
+        new.reputation := old.reputation - (old.upVotes) * 5;
+        new.upVotes := 0;
+        END IF;
+
+    IF new.reputation < 1 THEN
+        new.reputation := 1;
+    END IF;
+
+    RETURN new;
+END;
+
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER DOWNVOTESTOPREF
+AFTER UPDATE OF downVotes ON USERTP
+FOR EACH STATEMENT
+EXECUTE PROCEDURE downVotesRep();
+
+CREATE OR REPLACE FUNCTION downVotesRep() RETURNS Trigger AS $$
+BEGIN
+    IF new.downVotes >= 0 THEN
+        new.reputation := old.reputation - (new.downVotes - old.downVotes) * 2;
+    ELSE
+        new.reputation := old.reputation + (old.downVotes) * 2;
+        new.downVotes := 0;
+    END IF;
+
+    IF new.reputation < 1 THEN
+        new.reputation := 1;
+    END IF;
+
+    RETURN new;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * FROM migrate();
 SELECT * FROM userTP;
 SELECT * FROM badges;
