@@ -1,0 +1,5 @@
+1 - login to pampero via ssh
+2 - download the repo
+3 - run the following command: psql –h bd1.it.itba.edu.ar -U inegro –f import.sql PROOF
+	type manually, otherwise doest work.
+4 - end.
