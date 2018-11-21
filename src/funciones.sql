@@ -28,18 +28,6 @@ PRIMARY KEY(ID),
 FOREIGN KEY(userID) REFERENCES userTP
 );
 
-CREATE OR REPLACE FUNCTION migrate () RETURNS VOID
-AS $$
-  BEGIN
-    COPY userTP FROM '../resources/Users.tsv' (DELIMITER ' ');
-    COPY badges FROM '../resources/Badges.tsv' (DELIMITER ' ');
-
-    DROP TABLE userTP;
-    DROP TABLE badges;
-END;
-$$ LANGUAGE PLPGSQL;
-
-
 CREATE OR REPLACE FUNCTION upVotesRep() RETURNS Trigger AS $$
 BEGIN
     IF new.upVotes >= 0 THEN
@@ -87,7 +75,7 @@ BEFORE UPDATE OF downVotes ON USERTP
 FOR EACH ROW
 EXECUTE PROCEDURE downVotesRep();
 
-CREATE OR REPLACE FUNCTION ReporteBadge (userDesde IN userTP.ID%type, userHasta IN userTP.ID%type) 
+CREATE OR REPLACE FUNCTION ReporteBadge (userDesde IN userTP.ID%type, userHasta IN userTP.ID%type)
 RETURNS void
 AS $$
 
@@ -106,7 +94,7 @@ FROM
 FROM badges JOIN userTP ON badges.userID = userTP.ID
 WHERE userID <= userHasta AND userID >= userDesde
 GROUP BY userTP.ID, reputation, displayName, badgename
-UNION 
+UNION
 SELECT userTP.ID AS ID, reputation, displayName, CASE badgeclass WHEN 1 THEN 'GOLD Badges:' WHEN 2 THEN 'SILVER Badges:' WHEN 3 THEN 'BRONZE Badges:' END AS badgename, COUNT(badgeclass) AS qtty
 FROM badges JOIN userTP ON badges.userID = userTP.ID
 WHERE userID <= userHasta AND userID >= userDesde
@@ -120,9 +108,9 @@ OPEN mycursor;
 
 PERFORM DBMS_OUTPUT.DISABLE();
 PERFORM DBMS_OUTPUT.ENABLE();
-PERFORM DBMS_OUTPUT.SERVEROUTPUT ('t'); 
+PERFORM DBMS_OUTPUT.SERVEROUTPUT ('t');
 PERFORM DBMS_OUTPUT.PUT_LINE ('BADGES REPORT');
-PERFORM DBMS_OUTPUT.PUT_LINE ('ID       Display Name    Reputation      Badge Name      Qtty'); 
+PERFORM DBMS_OUTPUT.PUT_LINE ('ID       Display Name    Reputation      Badge Name      Qtty');
 IDviejo := -10;
 
 LOOP
@@ -132,19 +120,17 @@ EXIT WHEN NOT FOUND;
 IF ID <> IDviejo THEN
 IDViejo := ID;
 PERFORM DBMS_OUTPUT.PUT_LINE ( ID::TEXT ||'     ' || disp ||'     ' || rep::TEXT ||'     ' || bname ||'     ' || qtty::TEXT);
-ELSE 
+ELSE
 PERFORM DBMS_OUTPUT.PUT_LINE ('     ' ||'     ' ||'     ' || bname ||'     ' || qtty::TEXT);
 END IF;
 
 END LOOP;
 
 CLOSE mycursor;
- 
+
 END;
 
  $$ LANGUAGE plpgsql;
- 
 
-SELECT * FROM migrate();
 SELECT * FROM userTP;
 SELECT * FROM badges;
